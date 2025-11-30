@@ -3,6 +3,7 @@ import express, { Request, Response } from 'express';
 import { Pool } from 'pg';
 import dotenv from 'dotenv'
 import path from 'path'
+import { resourceLimits } from 'worker_threads';
 
 dotenv.config({path: path.join(process.cwd(), '.env') });
 
@@ -56,5 +57,34 @@ app.get('/', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'DB error' });
   }
 });
+
+app.post('/users', async(req:Request,res:Response)=>{
+
+  const {name, email}= req.body;
+  try{
+    const result =  await pool.query(`INSERT INTO users( name , email) VALUES($1,$2) 
+      RETURNING *`,[name,email])
+      // console.log(result.rows[0])
+      // res.send({message:"data insarted "})
+      res.status(201).json({
+      saccess: false,
+      message: 'data insrted successfully',
+      data : result.rows[0]
+    })
+
+  }catch(err:any){
+    res.status(404).json({
+      saccess: false,
+      message: err.message
+    })
+  }
+  res.status(201).json( {
+    success: true,
+    message : ' api runig'
+  })
+})
+app.listen(port,()=>{
+  console.log(`runing in ${port}`)
+})
 
 // ...existing code...
