@@ -1,12 +1,27 @@
+
 import express, { Request, Response } from 'express';
+import { Pool } from 'pg';
+
 
 const app = express();
 const port = 5000;
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World!'); 
+
+const pool = new Pool({
+  connectionString: `psql postgresql://neondb_owner:npg_xU6uEDIwda5h@ep-dry-glitter-ahihjmvz-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+//parser 
+app.use(express.json())
+
+app.get('/', async (req: Request, res: Response) => {
+  try {
+    const { rows } = await pool.query('SELECT NOW()');
+    res.json({ success: true, dbTime: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'DB error' });
+  }
 });
+
+// ...existing code...
