@@ -127,6 +127,63 @@ app.get('/users/:id',async (req:Request,res:Response)=>{
   }
 })
 
+
+// uapdate api 
+
+app.put('/users/:id',async (req:Request,res:Response)=>{
+  // console.log(req.params)
+  // res.send({message:'cool.......... '})
+
+  const{name,email} = req.body;
+  try{
+    const result = await pool.query(`UPDATE users SET  name=$1, email=$2 WHERE id=$3 RETURNING *`,[name,email, req.params.id])
+    // console.log(result.rows)
+    if(result.rows.length==0){
+      res.status(404).json({
+        saccess: false,
+      message: 'users not found'
+      })
+    } else{
+      res.status(200).json({
+        saccess: true,
+      message: "users update successfully",
+      data: result.rows[0]
+      })
+    }
+  }catch(err:any){
+    res.status(500).json({
+      saccess: false,
+      message: err.message
+    })
+  }
+});
+
+app.delete('/users/:id',async (req:Request,res:Response)=>{
+  // console.log(req.params)
+  // res.send({message:'cool.......... '})
+  try{
+    const result = await pool.query(`DELETE FROM users WHERE id = $1`,[req.params.id])
+    // console.log(result.rows)
+    if(result.rows.length==0){
+      res.status(404).json({
+        saccess: false,
+      message: 'users not found'
+      })
+    } else{
+      res.status(200).json({
+        saccess: true,
+      message: "users fetched successfully",
+      data: null
+      })
+    }
+  }catch(err:any){
+    res.status(500).json({
+      saccess: false,
+      message: err.message
+    })
+  }
+})
+
 app.listen(port,()=>{
   console.log(`runing in ${port}`)
 })
