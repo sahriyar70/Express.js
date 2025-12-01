@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv'
 import path from 'path'
 import { resourceLimits } from 'worker_threads';
+import { subscribe } from 'diagnostics_channel';
 
 dotenv.config({path: path.join(process.cwd(), '.env') });
 
@@ -57,7 +58,7 @@ app.get('/', async (req: Request, res: Response) => {
     res.status(500).json({ success: false, error: 'DB error' });
   }
 });
-
+// user CRUD 
 app.post('/users', async(req:Request,res:Response)=>{
 
   const {name, email}= req.body;
@@ -78,11 +79,54 @@ app.post('/users', async(req:Request,res:Response)=>{
       message: err.message
     })
   }
-  res.status(201).json( {
-    success: true,
-    message : ' api runig'
-  })
+  
 })
+
+app.get('/users/', async (req:Request,res:Response)=>{
+  try{
+    const result = await pool.query(`SELECT * FROM users`)
+    res.status(200).json({
+      success: true,
+      message:"users retrieved  successfully",
+      data: result.rows 
+    })
+
+  }catch(err:any){
+    res.status(500).json({
+      success: false,
+      message : err.message,
+      datails : err
+
+    })
+  }
+})
+
+app.get('/users/:id',async (req:Request,res:Response)=>{
+  // console.log(req.params)
+  // res.send({message:'cool.......... '})
+  try{
+    const result = await pool.query(`SELECT * FROM users WHERE id = $1`,[req.params.id])
+    // console.log(result.rows)
+    if(result.rows.length==0){
+      res.status(404).json({
+        saccess: false,
+      message: 'users not found'
+      })
+    } else{
+      res.status(200).json({
+        saccess: true,
+      message: "users fetched successfully",
+      data: result.rows[0]
+      })
+    }
+  }catch(err:any){
+    res.status(500).json({
+      saccess: false,
+      message: err.message
+    })
+  }
+})
+
 app.listen(port,()=>{
   console.log(`runing in ${port}`)
 })
